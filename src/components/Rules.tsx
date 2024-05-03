@@ -56,18 +56,20 @@ const rules: Array<Rule> = [
   },
 ];
 
-export default () => (
-  <>
-    <h1>Here are the rules</h1>
-    {rules.map((rule) => (
-      <div>
-        <h2>{rule.header}</h2>
-        {Array.isArray(rule.details) ? (
-          rule.details.map((detail) => <p>{detail}</p>)
-        ) : (
-          <p>{rule.details}</p>
-        )}
-      </div>
-    ))}
-  </>
-);
+export default function Rules() {
+  return (
+    <>
+      <h1>Here are the rules</h1>
+      {rules.map((rule) => (
+        <div key={rule.header}>
+          <h2>{rule.header}</h2>
+          {Array.isArray(rule.details) ? (
+            rule.details.map((detail) => <p key={detail}>{detail}</p>)
+          ) : (
+            <p>{rule.details}</p>
+          )}
+        </div>
+      ))}
+    </>
+  );
+}

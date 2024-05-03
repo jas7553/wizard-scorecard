@@ -5,8 +5,8 @@ import { AppDispatch, RootState } from "../store/store";
 
 interface CounterProps {
   count: number;
-  increment: any;
-  decrement: any;
+  increment(): any;
+  decrement(): any;
 }
 
 export const Counter = ({ count, increment, decrement }: CounterProps) => {
