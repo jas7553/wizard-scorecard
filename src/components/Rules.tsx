@@ -1,9 +1,9 @@
 import React from "react";
 
-interface Rule {
+type Rule = {
   header: string;
   details: Array<string> | string;
-}
+};
 
 const rules: Array<Rule> = [
   {
@@ -59,7 +59,9 @@ const rules: Array<Rule> = [
 export default function Rules() {
   return (
     <>
-      <h1>Here are the rules</h1>
+      <header>
+        <h1>Here are the rules</h1>
+      </header>
       {rules.map((rule) => (
         <div key={rule.header}>
           <h2>{rule.header}</h2>

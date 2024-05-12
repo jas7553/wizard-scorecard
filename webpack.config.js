@@ -14,7 +14,6 @@ const config = {
   devServer: {
     host: "localhost",
     historyApiFallback: true,
-    open: true,
   },
   plugins: [
     new HtmlWebpackPlugin({

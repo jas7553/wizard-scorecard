@@ -3,11 +3,11 @@
     "allowJs": true,
     "allowSyntheticDefaultImports": true,
     "jsx": "react",
-    "lib": ["ES2015", "DOM"],
+    "lib": ["ES2019", "DOM"],
     "module": "es6",
     "moduleResolution": "node",
     "noImplicitAny": true,
-    "target": "es5",
+    "target": "ES2019",
     "types": ["@testing-library/jest-dom"],
     "esModuleInterop": true
   },

@@ -1,18 +1,15 @@
-export interface Player {
+export type Player = {
   name: string;
   id: string;
-}
+};
 
-export interface NewGameState {
-  players: Array<Player>;
-  dealerId: string;
-}
+export type Round = Record<string, Cell>;
 
-export interface GamePlayer extends Player {
-  score: number;
-}
+export type Cell = {
+  player: Player;
+  bet?: number;
+  got?: number;
+  score?: number;
+};
 
-export interface GameState {
-  players: Array<GamePlayer>;
-  dealerId: string;
-}
+export type Bets = Record<string, number>;

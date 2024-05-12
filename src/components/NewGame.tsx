@@ -1,14 +1,14 @@
 import React, { ChangeEvent, useRef } from "react";
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-
 import { v4 as uuidv4 } from "uuid";
-import { NewGameState, Player } from "../types";
+
+import { Player } from "../types";
+import { LocalStorageKeys } from "../storage";
 
 function createPlayer(name: string): Player {
   return {
-    name: name,
+    name,
     id: uuidv4(),
   };
 }
@@ -24,12 +24,16 @@ const playerCountMinimum = 3;
 const playerCountMaximum = 6;
 
 export default function NewGame() {
-  const [players, setPlayers] = useState<Array<Player>>([
-    createPlayer("one"),
-    createPlayer("two"),
-  ]);
+  const player1 = createPlayer("player 1");
+  const player2 = createPlayer("player 2");
+  const [players, setPlayers] = useState<Record<string, Player>>({
+    [player1.id]: player1,
+    [player2.id]: player2,
+  });
   const [playerNameInput, setPlayerNameInput] = useState<string>("");
-  const [dealerId, setDealerId] = useState<string>(players[0].id);
+  const [dealerId, setDealerId] = useState<string>(
+    Object.entries(players)[0][1].id,
+  );
   const playerNameInputRef = useRef(null);
   const navigate = useNavigate();
 
@@ -39,23 +43,23 @@ export default function NewGame() {
     }
 
     const newPlayer = createPlayer(playerNameInput);
-    if (players.length === 0) {
+    if (Object.keys(players).length === 0) {
       setDealerId(newPlayer.id);
     }
-    setPlayers(players.concat(newPlayer));
+    setPlayers({ ...players, [newPlayer.id]: newPlayer });
     setPlayerNameInput("");
     playerNameInputRef.current?.focus();
   };
 
   function removePlayer(playerId: string): void {
-    setPlayers(players.filter((player) => player.id !== playerId));
+    setPlayers({ playerId: undefined, ...players });
     if (dealerId === playerId) {
       setDealerId(null);
     }
   }
 
   function canAddMorePlayers(): boolean {
-    return players.length < playerCountMaximum;
+    return Object.keys(players).length < playerCountMaximum;
   }
 
   function gameSetupState(): GameValidity {
@@ -63,11 +67,11 @@ export default function NewGame() {
       return GameValidity.NeedsDealer;
     }
 
-    if (players.length < playerCountMinimum) {
+    if (Object.keys(players).length < playerCountMinimum) {
       return GameValidity.TooFewPlayers;
     }
 
-    if (players.length > playerCountMaximum) {
+    if (Object.keys(players).length > playerCountMaximum) {
       return GameValidity.TooManyPlayers;
     }
 
@@ -78,9 +82,10 @@ export default function NewGame() {
 
   return (
     <>
-      <h1>Starting a new game</h1>
-      <h2>Players</h2>
-      <h3>Who is joining this game?</h3>
+      <header>
+        <h1>Starting a new game</h1>
+        <h2>Players</h2>
+      </header>
       <input
         disabled={!canAddMorePlayers()}
         autoFocus
@@ -101,8 +106,8 @@ export default function NewGame() {
       <button disabled={!canAddMorePlayers()} onClick={savePlayer}>
         Add player
       </button>
-      {players.map((player) => (
-        <p key={player.id}>
+      {Object.entries(players).map(([playerId, player]) => (
+        <p key={playerId}>
           {player.name}
           <button onClick={() => removePlayer(player.id)}>Remove</button>
           <input
@@ -123,11 +128,17 @@ export default function NewGame() {
         <button
           disabled={gameValidity !== GameValidity.Valid}
           onClick={() => {
-            const game: NewGameState = {
-              players: players,
-              dealerId: dealerId,
-            };
-            localStorage.setItem("gameState", JSON.stringify(game));
+            localStorage.setItem(
+              LocalStorageKeys.dealerId,
+              JSON.stringify(dealerId),
+            );
+            localStorage.setItem(
+              LocalStorageKeys.players,
+              JSON.stringify(players),
+            );
+            localStorage.removeItem(LocalStorageKeys.mode);
+            localStorage.removeItem(LocalStorageKeys.rounds);
+
             navigate("/game");
           }}
         >
