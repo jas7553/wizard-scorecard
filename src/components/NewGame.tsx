@@ -1,17 +1,25 @@
-import React, { ChangeEvent, useRef } from "react";
-import { useState } from "react";
+import React, { ChangeEvent, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
 
-import { Player } from "../types";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "..";
+import {
+  addPlayer,
+  removeDealer,
+  removePlayer,
+  setDealerId,
+} from "../features/players";
+import { freshScorecard } from "../features/scorecard";
 import { LocalStorageKeys } from "../storage";
+import { Player } from "../types";
 
-function createPlayer(name: string): Player {
+const createPlayer = (name: string): Player => {
   return {
     name,
     id: uuidv4(),
   };
-}
+};
 
 enum GameValidity {
   Valid,
@@ -24,37 +32,30 @@ const playerCountMinimum = 3;
 const playerCountMaximum = 6;
 
 export default function NewGame() {
-  const player1 = createPlayer("player 1");
-  const player2 = createPlayer("player 2");
-  const [players, setPlayers] = useState<Record<string, Player>>({
-    [player1.id]: player1,
-    [player2.id]: player2,
-  });
   const [playerNameInput, setPlayerNameInput] = useState<string>("");
-  const [dealerId, setDealerId] = useState<string>(
-    Object.entries(players)[0][1].id,
-  );
   const playerNameInputRef = useRef(null);
   const navigate = useNavigate();
+
+  const dealerId = useSelector((state: RootState) => state.players.dealerId);
+  const players = useSelector((state: RootState) => state.players.players);
+
+  const dispatch = useDispatch<AppDispatch>();
 
   const savePlayer = () => {
     if (!playerNameInput) {
       return;
     }
 
-    const newPlayer = createPlayer(playerNameInput);
-    if (Object.keys(players).length === 0) {
-      setDealerId(newPlayer.id);
-    }
-    setPlayers({ ...players, [newPlayer.id]: newPlayer });
+    dispatch(addPlayer(createPlayer(playerNameInput)));
     setPlayerNameInput("");
     playerNameInputRef.current?.focus();
   };
 
-  function removePlayer(playerId: string): void {
-    setPlayers({ playerId: undefined, ...players });
+  function removePlayerFromGame(playerId: string): void {
+    dispatch(removePlayer(playerId));
+
     if (dealerId === playerId) {
-      setDealerId(null);
+      dispatch(removeDealer());
     }
   }
 
@@ -109,12 +110,14 @@ export default function NewGame() {
       {Object.entries(players).map(([playerId, player]) => (
         <p key={playerId}>
           {player.name}
-          <button onClick={() => removePlayer(player.id)}>Remove</button>
+          <button onClick={() => removePlayerFromGame(player.id)}>
+            Remove
+          </button>
           <input
             type="checkbox"
             id={`dealer-checkbox-${player.id}`}
             checked={dealerId === player.id}
-            onChange={() => setDealerId(player.id)}
+            onChange={() => dispatch(setDealerId(player.id))}
           />
           <label htmlFor={`dealer-checkbox-${player.id}`}>Dealer?</label>
         </p>
@@ -138,6 +141,8 @@ export default function NewGame() {
             );
             localStorage.removeItem(LocalStorageKeys.mode);
             localStorage.removeItem(LocalStorageKeys.rounds);
+
+            dispatch(freshScorecard(players));
 
             navigate("/game");
           }}

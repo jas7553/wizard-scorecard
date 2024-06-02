@@ -1,8 +1,11 @@
 import React from "react";
+import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
-import { LocalStorageKeys, getFromStorage } from "../storage";
+import { RootState } from "..";
 
 export default function Home() {
+  const isGameInProgress =
+    useSelector((state: RootState) => state.players.dealerId) === null;
   return (
     <>
       <header>
@@ -12,9 +15,7 @@ export default function Home() {
         <div>
           <Link to="/game/new">New Game</Link>
         </div>
-        {getFromStorage<string>(LocalStorageKeys.dealerId) ? (
-          <Link to="/game">Resume Game</Link>
-        ) : null}
+        {isGameInProgress ? <Link to="/game">Resume Game</Link> : null}
         <div>
           <Link to="/rules">Rules</Link>
         </div>

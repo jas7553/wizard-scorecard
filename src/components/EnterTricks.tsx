@@ -1,32 +1,39 @@
 import React, { useState } from "react";
+import { useSelector } from "react-redux";
 
-import { Player, Round } from "../types";
+import { RootState } from "..";
 import Bets from "./Bets";
 import ScoreSheet from "./ScoreSheet";
+import { maxNumberOfRounds } from "../constants";
 
 export default function EnteringTricks(props: {
-  dealerId: string;
-  players: Record<string, Player>;
-  rounds: Array<Round>;
+  tricks?: Record<string, number>;
   onBack(): void;
   onConfirmTricks(tricks: Record<string, number>): void;
 }) {
+  const dealerId = useSelector((state: RootState) => state.players.dealerId);
+  const players = useSelector((state: RootState) => state.players.players);
+  const rounds = useSelector((state: RootState) => state.scorecard.rounds);
+
   const [tricks, setTricks] = useState(
-    Object.fromEntries(
-      Object.values(props.players).map((player) => [player.id, 0]),
-    ),
+    props.tricks ??
+      Object.fromEntries(
+        Object.values(players).map((player) => [player.id, 0]),
+      ),
   );
 
   return (
     <>
       <header>
         <h1>Enter tricks</h1>
-        <h2>Round {props.rounds.length} of 20</h2>
+        <h2>
+          Round {rounds.length} of {maxNumberOfRounds}
+        </h2>
       </header>
       <Bets
-        dealerId={props.dealerId}
-        players={props.players}
-        maxBets={props.rounds.length}
+        dealerId={dealerId}
+        players={players}
+        maxBets={rounds.length}
         bets={tricks}
         setBets={setTricks}
       />
@@ -34,7 +41,7 @@ export default function EnteringTricks(props: {
         <button onClick={props.onBack}>Back</button>
         <button
           disabled={
-            props.rounds.length !==
+            rounds.length !==
             Object.values(tricks).reduce(
               (sum, trickCount) => sum + trickCount,
               0,
@@ -46,10 +53,7 @@ export default function EnteringTricks(props: {
         </button>
       </div>
       <hr />
-      <ScoreSheet
-        players={Object.values(props.players)}
-        rounds={props.rounds}
-      />
+      <ScoreSheet />
     </>
   );
 }

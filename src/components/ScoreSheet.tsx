@@ -1,10 +1,12 @@
 import React from "react";
-import { Player, Round } from "../types";
+import { useSelector } from "react-redux";
 
-export default function ScoreSheet(props: {
-  players: Array<Player>;
-  rounds: Array<Round>;
-}) {
+import { RootState } from "..";
+
+export default function ScoreSheet() {
+  const players = useSelector((state: RootState) => state.players.players);
+  const rounds = useSelector((state: RootState) => state.scorecard.rounds);
+
   const tableStyle = { border: "1px solid black" };
   const roundColumnStyle = { ...tableStyle, width: "20px" };
   const tdStyle = { ...tableStyle, width: "100px" };
@@ -16,7 +18,7 @@ export default function ScoreSheet(props: {
         <thead>
           <tr>
             <th style={roundColumnStyle}></th>
-            {props.players.map((player) => (
+            {Object.values(players).map((player) => (
               <th key={player.id} style={tdStyle}>
                 {player.name}
               </th>
@@ -24,12 +26,12 @@ export default function ScoreSheet(props: {
           </tr>
         </thead>
         <tbody>
-          {props.rounds.map((round, roundNumber) => (
+          {rounds.map((round, roundNumber) => (
             <tr key={roundNumber}>
               <td key={roundNumber} style={roundColumnStyle}>
                 {roundNumber + 1}
               </td>
-              {props.players.map((player) => (
+              {Object.values(players).map((player) => (
                 <td key={player.id} style={tdStyle}>
                   <div>Bet: {round[player.id].bet}</div>
                   <div>Got: {round[player.id].got}</div>

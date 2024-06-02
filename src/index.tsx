@@ -1,28 +1,50 @@
+import { configureStore } from "@reduxjs/toolkit";
 import React from "react";
 import { createRoot } from "react-dom/client";
+import { Provider } from "react-redux";
 import { BrowserRouter, Link, Route, Routes } from "react-router-dom";
 
-import Home from "./components/Home";
-import Rules from "./components/Rules";
-import NewGame from "./components/NewGame";
 import Game from "./components/Game";
+import Home from "./components/Home";
+import NewGame from "./components/NewGame";
 import NotFound from "./components/NotFound";
+import Rules from "./components/Rules";
+import playersReducer from "./features/players";
+import scorecardReducer from "./features/scorecard";
+import listenerMiddleware, {
+  preloadedState,
+} from "./middleware/listener-middleware";
+
+export const store = configureStore({
+  reducer: {
+    players: playersReducer,
+    scorecard: scorecardReducer,
+  },
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware().prepend(listenerMiddleware),
+  preloadedState: preloadedState(),
+});
+
+export type RootState = ReturnType<typeof store.getState>;
+export type AppDispatch = typeof store.dispatch;
 
 const container = document.getElementById("root");
 const root = createRoot(container);
 root.render(
   <React.StrictMode>
-    <BrowserRouter>
-      <nav>
-        <Link to={"/"}>Home</Link>
-      </nav>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/game" element={<Game />} />
-        <Route path="/game/new" element={<NewGame />} />
-        <Route path="/rules" element={<Rules />} />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </BrowserRouter>
+    <Provider store={store}>
+      <BrowserRouter>
+        <nav>
+          <Link to={"/"} />
+        </nav>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/game" element={<Game />} />
+          <Route path="/game/new" element={<NewGame />} />
+          <Route path="/rules" element={<Rules />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </BrowserRouter>
+    </Provider>
   </React.StrictMode>,
 );

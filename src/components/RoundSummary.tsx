@@ -1,18 +1,19 @@
 import React from "react";
+import { useSelector } from "react-redux";
 
-import { Player, Round } from "../types";
+import { RootState } from "..";
 
-export default function RoundSummary(props: {
-  dealerId: string;
-  players: Record<string, Player>;
-  rounds: Array<Round>;
-}) {
+export default function RoundSummary() {
+  const dealerId = useSelector((state: RootState) => state.players.dealerId);
+  const players = useSelector((state: RootState) => state.players.players);
+  const rounds = useSelector((state: RootState) => state.scorecard.rounds);
+
   return (
     <table>
       <tbody>
-        {Object.values(props.players).map((player) => {
-          const playerName = `${player.name}${player.id === props.dealerId ? " (dealer)" : ""}`;
-          const playerScore = props.rounds
+        {Object.values(players).map((player) => {
+          const playerName = `${player.name}${player.id === dealerId ? " (dealer)" : ""}`;
+          const playerScore = rounds
             .map((round) =>
               Object.entries(round).find((entry) => player.id === entry[0]),
             )

@@ -1,15 +1,22 @@
 import React, { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { Navigate } from "react-router-dom";
 
-import { Player, Round } from "../types";
+import { AppDispatch, RootState } from "..";
+import { advanceDealer, unadvanceDealer } from "../features/players";
+import {
+  addRound,
+  confirmBets,
+  confirmTricks,
+  undoLastBets,
+  undoLastRound,
+  undoLastTricks,
+} from "../features/scorecard";
+import { getFromStorage, LocalStorageKeys } from "../storage";
 import EnterBets from "./EnterBets";
 import EnteringTricks from "./EnterTricks";
 import ShowSummary from "./ShowSummary";
-import {
-  getFromStorage,
-  getPlayersFromStorage,
-  LocalStorageKeys,
-} from "../storage";
+import { maxNumberOfRounds } from "../constants";
 
 export enum Mode {
   ShowSummary,
@@ -18,20 +25,9 @@ export enum Mode {
   EnteringTricks,
 }
 
-function freshRound(players: Record<string, Player>): Round {
-  return Object.fromEntries(
-    Object.values(players).map((player) => {
-      return [
-        player.id,
-        {
-          player: player,
-        },
-      ];
-    }),
-  );
-}
-
 export default function Game() {
+  const dispatch = useDispatch<AppDispatch>();
+
   const [mode, setMode] = useState<Mode>(
     getFromStorage(LocalStorageKeys.mode) || Mode.ShowSummary,
   );
@@ -40,72 +36,69 @@ export default function Game() {
     [mode],
   );
 
-  const [dealerId, setDealerId] = useState<string>(
-    getFromStorage(LocalStorageKeys.dealerId),
-  );
-  useEffect(
-    () =>
-      localStorage.setItem(LocalStorageKeys.dealerId, JSON.stringify(dealerId)),
-    [dealerId],
-  );
+  const [previousBets, setPreviousBets] = useState<{
+    [k: string]: number;
+  }>();
 
-  const players = getPlayersFromStorage();
+  const [previousTricks, setPreviousTricks] = useState<{
+    [k: string]: number;
+  }>();
 
-  if (!players) {
+  const dealerId = useSelector((state: RootState) => state.players.dealerId);
+  const players = useSelector((state: RootState) => state.players.players);
+  const rounds = useSelector((state: RootState) => state.scorecard.rounds);
+
+  if (dealerId === null) {
     return <Navigate replace to={"/game/new"} />;
   }
-
-  const [rounds, setRounds] = useState<Array<Round>>(
-    getFromStorage(LocalStorageKeys.rounds) || [freshRound(players)],
-  );
-  useEffect(
-    () => localStorage.setItem("rounds", JSON.stringify(rounds)),
-    [rounds],
-  );
 
   if (mode === Mode.ShowSummary) {
     return (
       <ShowSummary
-        dealerId={dealerId}
-        players={players}
         mode={mode}
-        rounds={rounds}
+        onBack={() => {
+          setPreviousTricks(
+            Object.fromEntries(
+              Object.values(rounds[rounds.length - 2]).map((cell) => [
+                cell.player.id,
+                cell.got,
+              ]),
+            ),
+          );
+          dispatch(unadvanceDealer());
+          dispatch(undoLastRound());
+          dispatch(undoLastTricks());
+          setMode(Mode.EnteringTricks);
+        }}
         onNext={() => setMode(Mode.CollectingBets)}
       />
     );
   } else if (mode === Mode.ShowSummaryBeforeTricks) {
     return (
       <ShowSummary
-        dealerId={dealerId}
-        players={players}
         mode={mode}
-        rounds={rounds}
+        onBack={() => {
+          setPreviousBets(
+            Object.fromEntries(
+              Object.values(rounds[rounds.length - 1]).map((cell) => [
+                cell.player.id,
+                cell.bet,
+              ]),
+            ),
+          );
+          dispatch(undoLastBets());
+          setMode(Mode.CollectingBets);
+        }}
         onNext={() => setMode(Mode.EnteringTricks)}
       />
     );
   } else if (mode === Mode.CollectingBets) {
     return (
       <EnterBets
-        dealerId={dealerId}
-        players={players}
-        rounds={rounds}
+        bets={previousBets}
         onBack={() => setMode(Mode.ShowSummary)}
         onConfirmBets={(bets) => {
-          const previousRounds: Array<Round> = rounds.slice(
-            0,
-            rounds.length - 1,
-          );
-          const currentRound: Round = rounds[rounds.length - 1];
-          const updatedRound: Round = Object.fromEntries(
-            Object.entries(currentRound).map(([playerId, cell]) => {
-              const updatedCell = {
-                ...cell,
-                bet: bets[playerId],
-              };
-              return [playerId, updatedCell];
-            }),
-          );
-          setRounds([...previousRounds, updatedRound]);
+          dispatch(confirmBets(bets));
           setMode(Mode.ShowSummaryBeforeTricks);
         }}
       />
@@ -113,37 +106,17 @@ export default function Game() {
   } else {
     return (
       <EnteringTricks
-        dealerId={dealerId}
-        players={players}
-        rounds={rounds}
+        tricks={previousTricks}
         onBack={() => setMode(Mode.ShowSummaryBeforeTricks)}
         onConfirmTricks={(tricks) => {
-          const previousRounds = rounds.slice(0, rounds.length - 1);
-          const updatedRound = Object.fromEntries(
-            Object.values(rounds[rounds.length - 1]).map((cell) => {
-              const updatedCell = {
-                ...cell,
-                got: tricks[cell.player.id],
-                score:
-                  cell.bet === tricks[cell.player.id]
-                    ? 20 + tricks[cell.player.id] * 10
-                    : -10 * tricks[cell.player.id],
-              };
-              return [cell.player.id, updatedCell];
-            }),
-          );
+          dispatch(confirmTricks(tricks));
 
-          if (rounds.length === 20) {
-            setRounds([...previousRounds, updatedRound]);
-            setMode(Mode.ShowSummary);
-          } else {
-            setRounds([...previousRounds, updatedRound, freshRound(players)]);
-            setMode(Mode.ShowSummary);
-            const playerIds = Object.keys(players);
-            setDealerId(
-              playerIds[(playerIds.indexOf(dealerId) + 1) % playerIds.length],
-            );
+          if (rounds.length !== maxNumberOfRounds) {
+            dispatch(advanceDealer());
+            dispatch(addRound(players));
           }
+
+          setMode(Mode.ShowSummary);
         }}
       />
     );
