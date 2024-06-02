@@ -1,10 +1,10 @@
 import { createListenerMiddleware } from "@reduxjs/toolkit";
+
 import { RootState } from "..";
-import { createPlayer } from "../features/players";
 import {
-  LocalStorageKeys,
   getFromStorage,
   getPlayersFromStorage,
+  LocalStorageKeys,
 } from "../storage";
 import { Round } from "../types";
 
@@ -33,17 +33,10 @@ listenerMiddleware.startListening({
 });
 
 export const preloadedState = () => {
-  // const player1 = createPlayer("player 1");
-  // const player2 = createPlayer("player 2");
   return {
     players: {
       dealerId: getFromStorage<string>(LocalStorageKeys.dealerId),
-      //  || player1.id,
-      players: getPlayersFromStorage()
-      //  || {
-      //   [player1.id]: player1,
-      //   [player2.id]: player2,
-      // },
+      players: getPlayersFromStorage(),
     },
     scorecard: {
       rounds: getFromStorage<Array<Round>>(LocalStorageKeys.rounds),

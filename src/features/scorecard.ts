@@ -51,22 +51,18 @@ const scorecardSlice = createSlice({
     },
     undoLastBets: (state) => {
       const round = state.rounds[state.rounds.length - 1];
-      Object.values(round).forEach(
-        (cell) => delete cell.bet,
-      );
+      Object.values(round).forEach((cell) => delete cell.bet);
     },
     undoLastTricks: (state) => {
       const round = state.rounds[state.rounds.length - 1];
-      Object.values(round).forEach(
-        (cell) => {
-          delete cell.got;
-          delete cell.score;
-        }
-      );
+      Object.values(round).forEach((cell) => {
+        delete cell.got;
+        delete cell.score;
+      });
     },
     undoLastRound: (state) => {
       state.rounds.pop();
-    }
+    },
   },
 });
 
@@ -77,7 +73,7 @@ export const {
   freshScorecard,
   undoLastBets,
   undoLastTricks,
-  undoLastRound
+  undoLastRound,
 } = scorecardSlice.actions;
 
 export default scorecardSlice.reducer;
