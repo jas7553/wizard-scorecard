@@ -1,8 +1,8 @@
 import React, { ChangeEvent, useRef, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
 
-import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "..";
 import {
   addPlayer,
@@ -14,12 +14,10 @@ import { freshScorecard } from "../features/scorecard";
 import { LocalStorageKeys } from "../storage";
 import { Player } from "../types";
 
-const createPlayer = (name: string): Player => {
-  return {
-    name,
-    id: uuidv4(),
-  };
-};
+const createPlayer = (name: string): Player => ({
+  name,
+  id: uuidv4(),
+});
 
 enum GameValidity {
   Valid,

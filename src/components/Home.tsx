@@ -1,11 +1,12 @@
 import React from "react";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
+
 import { RootState } from "..";
 
 export default function Home() {
   const isGameInProgress =
-    useSelector((state: RootState) => state.players.dealerId) === null;
+    useSelector((state: RootState) => state.players.dealerId) !== null;
   return (
     <>
       <header>

@@ -51,5 +51,7 @@ module.exports = () => {
     config.plugins.push(new MiniCssExtractPlugin());
   }
 
+  config.devtool = "source-map";
+
   return config;
 };

@@ -36,7 +36,7 @@ export const preloadedState = () => {
   return {
     players: {
       dealerId: getFromStorage<string>(LocalStorageKeys.dealerId),
-      players: getPlayersFromStorage(),
+      players: getPlayersFromStorage() || {},
     },
     scorecard: {
       rounds: getFromStorage<Array<Round>>(LocalStorageKeys.rounds),
