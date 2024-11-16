@@ -1,3 +1,4 @@
+import { Grid, GridItem, Heading, Table } from "@chakra-ui/react";
 import React from "react";
 import { useSelector } from "react-redux";
 
@@ -7,41 +8,42 @@ export default function ScoreSheet() {
   const players = useSelector((state: RootState) => state.players.players);
   const rounds = useSelector((state: RootState) => state.scorecard.rounds);
 
-  const tableStyle = { border: "1px solid black" };
-  const roundColumnStyle = { ...tableStyle, width: "20px" };
-  const tdStyle = { ...tableStyle, width: "100px" };
-
   return (
     <>
-      <h2>Scorecard</h2>
-      <table style={{ ...tableStyle, borderCollapse: "collapse" }}>
-        <thead>
-          <tr>
-            <th style={roundColumnStyle}></th>
+      <Heading size={"4xl"} mb={"4"}>
+        Scorecard
+      </Heading>
+      <Table.Root variant={"outline"} tableLayout={"fixed"}>
+        <Table.Header>
+          <Table.Row>
+            <Table.ColumnHeader w={"75px"} />
             {Object.values(players).map((player) => (
-              <th key={player.id} style={tdStyle}>
+              <Table.ColumnHeader key={player.id} w={"100%"}>
                 {player.name}
-              </th>
+              </Table.ColumnHeader>
             ))}
-          </tr>
-        </thead>
-        <tbody>
+          </Table.Row>
+        </Table.Header>
+        <Table.Body>
           {rounds.map((round, roundNumber) => (
-            <tr key={roundNumber}>
-              <td key={roundNumber} style={roundColumnStyle}>
-                {roundNumber + 1}
-              </td>
+            <Table.Row key={roundNumber}>
+              <Table.Cell key={roundNumber}>{roundNumber + 1}</Table.Cell>
               {Object.values(players).map((player) => (
-                <td key={player.id} style={tdStyle}>
-                  <div>Bet: {round[player.id].bet}</div>
-                  <div>Got: {round[player.id].got}</div>
-                  <div>Score: {round[player.id].score}</div>
-                </td>
+                <Table.Cell key={player.id} padding={"2"}>
+                  <Grid templateColumns="auto 1fr">
+                    <GridItem mr={"2"}>Bet:</GridItem>
+                    <GridItem>{round[player.id].bet}</GridItem>
+                    <GridItem mr={"2"}>Got:</GridItem>
+                    <GridItem>{round[player.id].got}</GridItem>
+                    <GridItem mr={"2"}>Score:</GridItem>
+                    <GridItem>{round[player.id].score}</GridItem>
+                  </Grid>
+                </Table.Cell>
               ))}
-            </tr>
+            </Table.Row>
           ))}
-        </tbody>
-      </table>
+        </Table.Body>
+      </Table.Root>
     </>
   );
 }

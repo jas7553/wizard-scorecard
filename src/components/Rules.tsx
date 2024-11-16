@@ -1,4 +1,6 @@
+import { Container, Heading, Text, VStack } from "@chakra-ui/react";
 import React from "react";
+import { LuChevronLeft } from "react-icons/lu";
 
 type Rule = {
   header: string;
@@ -58,20 +60,26 @@ const rules: Array<Rule> = [
 
 export default function Rules() {
   return (
-    <>
-      <header>
-        <h1>Here are the rules</h1>
-      </header>
-      {rules.map((rule) => (
-        <div key={rule.header}>
-          <h2>{rule.header}</h2>
-          {Array.isArray(rule.details) ? (
-            rule.details.map((detail) => <p key={detail}>{detail}</p>)
-          ) : (
-            <p>{rule.details}</p>
-          )}
-        </div>
-      ))}
-    </>
+    <Container maxW={"prose"}>
+      <Heading size="2xl" textAlign={"center"} paddingY={4}>
+        Here are the rules
+      </Heading>
+      <VStack gap={3} alignItems={"flex-start"}>
+        {rules.map((rule) => (
+          <div key={rule.header}>
+            <Heading size="lg">{rule.header}</Heading>
+            {Array.isArray(rule.details) ? (
+              rule.details.map((detail) => (
+                <Text py={1} key={detail}>
+                  {detail}
+                </Text>
+              ))
+            ) : (
+              <Text>{rule.details}</Text>
+            )}
+          </div>
+        ))}
+      </VStack>
+    </Container>
   );
 }

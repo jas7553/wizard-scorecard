@@ -1,13 +1,14 @@
-import { current } from "@reduxjs/toolkit";
+import { Button, Container, Heading, HStack } from "@chakra-ui/react";
 import React from "react";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 
 import { RootState } from "..";
+import { getMaxRounds } from "../constants";
 import { Mode } from "./Game";
 import RoundSummary from "./RoundSummary";
 import ScoreSheet from "./ScoreSheet";
-import { maxNumberOfRounds } from "../constants";
+import { Alert } from "./ui/alert";
 
 export default function ShowSummary(props: {
   mode: Mode;
@@ -18,7 +19,7 @@ export default function ShowSummary(props: {
   const rounds = useSelector((state: RootState) => state.scorecard.rounds);
 
   const isGameOver =
-    rounds.length === maxNumberOfRounds &&
+    rounds.length === getMaxRounds(Object.keys(players).length) &&
     Object.values(rounds[rounds.length - 1]).some((cell) => cell.score);
 
   const isBackButtonShown =
@@ -44,32 +45,46 @@ export default function ShowSummary(props: {
   };
 
   return (
-    <>
+    <Container maxW={"3xl"}>
       <header>
-        <h1>Summary</h1>
-        <h2>
-          Round {rounds.length} of {maxNumberOfRounds}
-        </h2>
+        <Heading size="3xl" textAlign={"center"}>
+          Summary
+        </Heading>
+        <Heading size="xl" textAlign={"center"}>
+          Round {rounds.length} of {getMaxRounds(Object.keys(players).length)}
+        </Heading>
       </header>
       <RoundSummary />
       {isGameOver ? null : (
-        <>
+        <HStack alignItems={"stretch"} gap={"4"} mb={"4"}>
           {isBackButtonShown ? (
-            <button onClick={props.onBack}>Back</button>
+            <Button flex={"1"} onClick={props.onBack}>
+              Back
+            </Button>
           ) : null}
-          <button onClick={props.onNext}>
+          <Button flex={"1"} onClick={props.onNext}>
             Enter {props.mode === Mode.ShowSummary ? "bets" : "tricks"}
-          </button>
-        </>
+          </Button>
+        </HStack>
       )}
       {isGameOver ? (
         <>
-          <p>Winner: {determineWinner()}</p>
-          <Link to="/game/new">New Game</Link>
+          <Alert
+            status="success"
+            title={"Winner: " + determineWinner() + ""}
+            mb={"4"}
+          />
+          <HStack alignItems={"stretch"} gap={"4"} mb={"4"}>
+            {isBackButtonShown ? (
+              <Button flex={"1"}>
+                <Link to="/game/new">New Game</Link>
+              </Button>
+            ) : null}
+          </HStack>
         </>
       ) : null}
       <hr />
       <ScoreSheet />
-    </>
+    </Container>
   );
 }

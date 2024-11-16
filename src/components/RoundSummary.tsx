@@ -1,3 +1,4 @@
+import { Table } from "@chakra-ui/react";
 import React from "react";
 import { useSelector } from "react-redux";
 
@@ -9,8 +10,8 @@ export default function RoundSummary() {
   const rounds = useSelector((state: RootState) => state.scorecard.rounds);
 
   return (
-    <table>
-      <tbody>
+    <Table.Root size={"sm"} mb={"4"}>
+      <Table.Body>
         {Object.values(players).map((player) => {
           const playerName = `${player.name}${player.id === dealerId ? " (dealer)" : ""}`;
           const playerScore = rounds
@@ -22,13 +23,13 @@ export default function RoundSummary() {
               0,
             );
           return (
-            <tr key={player.id}>
-              <td key={`${player.id}-name`}>{playerName}</td>
-              <td key={`${player.id}-score`}>{playerScore}</td>
-            </tr>
+            <Table.Row key={player.id}>
+              <Table.Cell key={`${player.id}-name`}>{playerName}</Table.Cell>
+              <Table.Cell key={`${player.id}-score`}>{playerScore}</Table.Cell>
+            </Table.Row>
           );
         })}
-      </tbody>
-    </table>
+      </Table.Body>
+    </Table.Root>
   );
 }

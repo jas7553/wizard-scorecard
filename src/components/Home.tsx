@@ -1,3 +1,4 @@
+import { Button, Container, Heading, VStack } from "@chakra-ui/react";
 import React from "react";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
@@ -9,18 +10,24 @@ export default function Home() {
     useSelector((state: RootState) => state.players.dealerId) !== null;
   return (
     <>
-      <header>
-        <h1>Jason&apos;s app for scoring Wizard</h1>
-      </header>
-      <div>
-        <div>
-          <Link to="/game/new">New Game</Link>
-        </div>
-        {isGameInProgress ? <Link to="/game">Resume Game</Link> : null}
-        <div>
-          <Link to="/rules">Rules</Link>
-        </div>
-      </div>
+      <Container maxW="container-xl">
+        <Heading size="3xl" textAlign={"center"} paddingY={4}>
+          Jason&apos;s app for scoring Wizard
+        </Heading>
+        <VStack>
+          {isGameInProgress ? (
+            <Button w="lg" bg={"gray.900"} asChild>
+              <Link to="/game">Resume Game</Link>
+            </Button>
+          ) : null}
+          <Button w="lg" bg={"gray.900"} asChild>
+            <Link to="/game/new">New Game</Link>
+          </Button>
+          <Button w="lg" bg={"gray.900"} asChild>
+            <Link to="/rules">Rules</Link>
+          </Button>
+        </VStack>
+      </Container>
     </>
   );
 }

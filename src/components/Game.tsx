@@ -16,7 +16,7 @@ import { getFromStorage, LocalStorageKeys } from "../storage";
 import EnterBets from "./EnterBets";
 import EnteringTricks from "./EnterTricks";
 import ShowSummary from "./ShowSummary";
-import { maxNumberOfRounds } from "../constants";
+import { getMaxRounds } from "../constants";
 
 export enum Mode {
   ShowSummary,
@@ -111,7 +111,7 @@ export default function Game() {
         onConfirmTricks={(tricks) => {
           dispatch(confirmTricks(tricks));
 
-          if (rounds.length !== maxNumberOfRounds) {
+          if (rounds.length !== getMaxRounds(Object.keys(players).length)) {
             dispatch(advanceDealer());
             dispatch(addRound(players));
           }
