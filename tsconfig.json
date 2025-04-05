@@ -11,5 +11,5 @@
     "types": ["@testing-library/jest-dom"],
     "esModuleInterop": true
   },
-  "exclude": ["node_modules"]
+  "exclude": ["cdk", "node_modules"]
 }

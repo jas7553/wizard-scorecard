@@ -27,7 +27,12 @@
     "lint": "eslint \"src/**/*.{js,jsx,ts,tsx,json,css,scss,html}\"",
     "serve": "webpack serve",
     "test": "jest",
-    "watch": "webpack --watch"
+    "watch": "webpack --watch",
+    "deploy": "npm run build:prod && cd cdk && npm run deploy",
+    "cdk:init": "cd cdk && npm install",
+    "cdk:deploy": "cd cdk && npm run deploy",
+    "cdk:destroy": "cd cdk && npm run destroy",
+    "cdk:synth": "cd cdk && npm run synth"
   },
   "browserslist": {
     "production": [
