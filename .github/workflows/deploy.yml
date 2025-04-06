@@ -42,4 +42,4 @@ jobs:
       - name: Deploy with CDK
         run: |
           cd cdk
-          npx cdk deploy --require-approval never
+          npx cdk deploy --require-approval never --all
