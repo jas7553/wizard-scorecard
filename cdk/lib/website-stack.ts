@@ -1,6 +1,17 @@
-import { CfnOutput, Duration, RemovalPolicy, Stack, StackProps } from "aws-cdk-lib";
+import {
+  CfnOutput,
+  Duration,
+  RemovalPolicy,
+  Stack,
+  StackProps,
+} from "aws-cdk-lib";
 import { Certificate } from "aws-cdk-lib/aws-certificatemanager";
-import { AccessLevel, CfnDistribution, Distribution, ViewerProtocolPolicy } from "aws-cdk-lib/aws-cloudfront";
+import {
+  AccessLevel,
+  CfnDistribution,
+  Distribution,
+  ViewerProtocolPolicy,
+} from "aws-cdk-lib/aws-cloudfront";
 import { CfnOriginAccessControl } from "aws-cdk-lib/aws-cloudfront";
 import { S3BucketOrigin } from "aws-cdk-lib/aws-cloudfront-origins";
 import { PolicyStatement, ServicePrincipal } from "aws-cdk-lib/aws-iam";
@@ -15,13 +26,10 @@ const siteCertificateArn =
   "arn:aws:acm:us-east-1:890396755250:certificate/3244876a-bb67-4f9c-86e7-b6413e00f75c";
 
 export class WebsiteStack extends Stack {
-  public readonly websiteBucket: Bucket;
-  public readonly distribution: Distribution;
-
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
-    this.websiteBucket = new Bucket(this, "WebsiteBucket", {
+    const websiteBucket = new Bucket(this, "WebsiteBucket", {
       blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
       removalPolicy: RemovalPolicy.DESTROY,
       autoDeleteObjects: true,
@@ -39,7 +47,7 @@ export class WebsiteStack extends Stack {
     });
 
     // Create high-level Distribution with S3BucketOrigin
-    this.distribution = new Distribution(this, "Distribution", {
+    const distribution = new Distribution(this, "Distribution", {
       defaultRootObject: "index.html",
       domainNames: [`www.${domainName}`, domainName],
       certificate: Certificate.fromCertificateArn(
@@ -48,7 +56,7 @@ export class WebsiteStack extends Stack {
         siteCertificateArn,
       ),
       defaultBehavior: {
-        origin: S3BucketOrigin.withOriginAccessControl(this.websiteBucket, {
+        origin: S3BucketOrigin.withOriginAccessControl(websiteBucket, {
           originAccessLevels: [AccessLevel.READ],
         }),
         viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
@@ -70,7 +78,7 @@ export class WebsiteStack extends Stack {
     });
 
     // Patch in OAC to the underlying L1 CloudFront distribution
-    const cfnDist = this.distribution.node.defaultChild as CfnDistribution;
+    const cfnDist = distribution.node.defaultChild as CfnDistribution;
     cfnDist.addOverride(
       "Properties.DistributionConfig.Origins.0.OriginAccessControlId",
       originAccessControl.ref,
@@ -81,14 +89,14 @@ export class WebsiteStack extends Stack {
     );
 
     // Allow CloudFront to read from the S3 bucket
-    this.websiteBucket.addToResourcePolicy(
+    websiteBucket.addToResourcePolicy(
       new PolicyStatement({
         actions: ["s3:GetObject"],
-        resources: [this.websiteBucket.arnForObjects("*")],
+        resources: [websiteBucket.arnForObjects("*")],
         principals: [new ServicePrincipal("cloudfront.amazonaws.com")],
         conditions: {
           StringEquals: {
-            "AWS:SourceArn": `arn:aws:cloudfront::${this.account}:distribution/${this.distribution.distributionId}`,
+            "AWS:SourceArn": `arn:aws:cloudfront::${this.account}:distribution/${distribution.distributionId}`,
           },
         },
       }),
@@ -97,8 +105,8 @@ export class WebsiteStack extends Stack {
     // Deploy website contents to the bucket
     new BucketDeployment(this, "DeployWebsite", {
       sources: [Source.asset("../dist")],
-      destinationBucket: this.websiteBucket,
-      distribution: this.distribution,
+      destinationBucket: websiteBucket,
+      distribution: distribution,
       distributionPaths: ["/*"],
     });
 
@@ -110,13 +118,13 @@ export class WebsiteStack extends Stack {
     new ARecord(this, "RootAlias", {
       zone: hostedZone,
       recordName: domainName,
-      target: RecordTarget.fromAlias(new CloudFrontTarget(this.distribution)),
+      target: RecordTarget.fromAlias(new CloudFrontTarget(distribution)),
     });
 
     new ARecord(this, "WwwAlias", {
       zone: hostedZone,
       recordName: `www.${domainName}`,
-      target: RecordTarget.fromAlias(new CloudFrontTarget(this.distribution)),
+      target: RecordTarget.fromAlias(new CloudFrontTarget(distribution)),
     });
 
     // Output the website URL

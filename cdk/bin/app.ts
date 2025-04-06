@@ -10,13 +10,10 @@ const env = {
   region: process.env.CDK_DEFAULT_REGION,
 };
 
-const websiteStack = new WebsiteStack(app, "WizardWebsiteStack", {
+new WebsiteStack(app, "WizardWebsiteStack", {
   env,
 });
 
 new DeploymentInfrastructureStack(app, "DeploymentInfrastructureStack", {
   env,
-  deploymentStackName: websiteStack.stackName,
-  websiteBucket: websiteStack.websiteBucket,
-  distribution: websiteStack.distribution,
 });

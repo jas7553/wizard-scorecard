@@ -1,44 +1,23 @@
-import { ArnFormat, Stack, StackProps } from "aws-cdk-lib";
-import { IDistribution } from "aws-cdk-lib/aws-cloudfront";
+import { Stack, StackProps } from "aws-cdk-lib";
+import { Construct } from "constructs";
 import {
-  OpenIdConnectProvider,
   PolicyStatement,
   Role,
   WebIdentityPrincipal,
 } from "aws-cdk-lib/aws-iam";
-import { IBucket } from "aws-cdk-lib/aws-s3";
-import { Construct } from "constructs";
 
-const gitHubOrg = "jas7553";
-const gitHubRepo = "wizard-scorecard";
-
-interface DeploymentInfrastructureStackProps extends StackProps {
-  deploymentStackName: string;
-  distribution: IDistribution;
-  websiteBucket: IBucket;
-}
+const gitHubRepoName = "jas7553/wizard-scorecard";
 
 export class DeploymentInfrastructureStack extends Stack {
-  constructor(
-    scope: Construct,
-    id: string,
-    props: DeploymentInfrastructureStackProps,
-  ) {
+  constructor(scope: Construct, id: string, props: StackProps) {
     super(scope, id, props);
-
-    const openIdConnectProvider =
-      OpenIdConnectProvider.fromOpenIdConnectProviderArn(
-        this,
-        "GitHubOIDCProvider",
-        `arn:aws:iam::${this.account}:oidc-provider/token.actions.githubusercontent.com`,
-      );
 
     const role = new Role(this, "GitHubActionsRole", {
       assumedBy: new WebIdentityPrincipal(
-        openIdConnectProvider.openIdConnectProviderArn,
+        `arn:aws:iam::${Stack.of(this).account}:oidc-provider/token.actions.githubusercontent.com`,
         {
           StringLike: {
-            "token.actions.githubusercontent.com:sub": `repo:${gitHubOrg}/${gitHubRepo}:*`,
+            "token.actions.githubusercontent.com:sub": `repo:${gitHubRepoName}:*`,
           },
         },
       ),
@@ -46,58 +25,17 @@ export class DeploymentInfrastructureStack extends Stack {
       roleName: "GitHubActionsCDKDeployRole",
     });
 
-    role.addToPolicy(
-      new PolicyStatement({
-        actions: [
-          "cloudformation:CreateChangeSet",
-          "cloudformation:CreateStack",
-          "cloudformation:DeleteChangeSet",
-          "cloudformation:DeleteStack",
-          "cloudformation:DescribeChangeSet",
-          "cloudformation:DescribeStackEvents",
-          "cloudformation:DescribeStacks",
-          "cloudformation:ExecuteChangeSet",
-          "cloudformation:GetTemplate",
-          "cloudformation:SetStackPolicy",
-          "cloudformation:UpdateStack",
-          "cloudformation:ValidateTemplate",
-        ],
-        resources: [
-          this.formatArn({
-            service: "cloudformation",
-            resource: "stack",
-            resourceName: `${props.deploymentStackName}/*`,
-            arnFormat: ArnFormat.SLASH_RESOURCE_NAME,
-          }),
-        ],
-      }),
-    );
+    const bootstrapQualifier =
+      this.node.tryGetContext("bootstrapQualifier") ?? "hnb659fds";
 
     role.addToPolicy(
       new PolicyStatement({
-        actions: [
-          "s3:DeleteObject",
-          "s3:GetObject",
-          "s3:ListBucket",
-          "s3:PutObject",
-        ],
+        actions: ["sts:AssumeRole"],
         resources: [
-          props.websiteBucket.bucketArn,
-          `${props.websiteBucket.bucketArn}/*`,
-        ],
-      }),
-    );
-
-    role.addToPolicy(
-      new PolicyStatement({
-        actions: [
-          "cloudfront:CreateInvalidation",
-          "cloudfront:GetDistribution",
-          "cloudfront:GetInvalidation",
-          "cloudfront:ListInvalidations",
-        ],
-        resources: [
-          `arn:aws:cloudfront::${this.account}:distribution/${props.distribution.distributionId}`,
+          `arn:aws:iam::${Stack.of(this).account}:role/cdk-${bootstrapQualifier}-cfn-exec-role-${Stack.of(this).account}-${Stack.of(this).region}`,
+          `arn:aws:iam::${Stack.of(this).account}:role/cdk-${bootstrapQualifier}-deploy-role-${Stack.of(this).account}-${Stack.of(this).region}`,
+          `arn:aws:iam::${Stack.of(this).account}:role/cdk-${bootstrapQualifier}-file-publishing-role-${Stack.of(this).account}-${Stack.of(this).region}`,
+          `arn:aws:iam::${Stack.of(this).account}:role/cdk-${bootstrapQualifier}-lookup-role-${Stack.of(this).account}-${Stack.of(this).region}`,
         ],
       }),
     );
