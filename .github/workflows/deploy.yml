@@ -42,4 +42,4 @@ jobs:
       - name: Deploy with CDK
         run: |
           cd cdk
-          npx cdk deploy --require-approval never --all
+          npx cdk deploy WizardWebsiteStack --require-approval never
