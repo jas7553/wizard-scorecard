@@ -12,7 +12,7 @@ export default function Home() {
     <>
       <Container maxW="container-xl">
         <Heading size="3xl" textAlign={"center"} paddingY={4}>
-          Jason&apos;s app for scoring Wizard
+          Wizard Scorecard
         </Heading>
         <VStack>
           {isGameInProgress ? (
