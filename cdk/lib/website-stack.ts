@@ -15,10 +15,13 @@ const siteCertificateArn =
   "arn:aws:acm:us-east-1:890396755250:certificate/3244876a-bb67-4f9c-86e7-b6413e00f75c";
 
 export class WebsiteStack extends Stack {
+  public readonly websiteBucket: Bucket;
+  public readonly distribution: Distribution;
+
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
-    const websiteBucket = new Bucket(this, "WebsiteBucket", {
+    this.websiteBucket = new Bucket(this, "WebsiteBucket", {
       blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
       removalPolicy: RemovalPolicy.DESTROY,
       autoDeleteObjects: true,
@@ -36,7 +39,7 @@ export class WebsiteStack extends Stack {
     });
 
     // Create high-level Distribution with S3BucketOrigin
-    const distribution = new Distribution(this, "Distribution", {
+    this.distribution = new Distribution(this, "Distribution", {
       defaultRootObject: "index.html",
       domainNames: [`www.${domainName}`, domainName],
       certificate: Certificate.fromCertificateArn(
@@ -45,7 +48,7 @@ export class WebsiteStack extends Stack {
         siteCertificateArn,
       ),
       defaultBehavior: {
-        origin: S3BucketOrigin.withOriginAccessControl(websiteBucket, {
+        origin: S3BucketOrigin.withOriginAccessControl(this.websiteBucket, {
           originAccessLevels: [AccessLevel.READ],
         }),
         viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
@@ -67,7 +70,7 @@ export class WebsiteStack extends Stack {
     });
 
     // Patch in OAC to the underlying L1 CloudFront distribution
-    const cfnDist = distribution.node.defaultChild as CfnDistribution;
+    const cfnDist = this.distribution.node.defaultChild as CfnDistribution;
     cfnDist.addOverride(
       "Properties.DistributionConfig.Origins.0.OriginAccessControlId",
       originAccessControl.ref,
@@ -78,14 +81,14 @@ export class WebsiteStack extends Stack {
     );
 
     // Allow CloudFront to read from the S3 bucket
-    websiteBucket.addToResourcePolicy(
+    this.websiteBucket.addToResourcePolicy(
       new PolicyStatement({
         actions: ["s3:GetObject"],
-        resources: [websiteBucket.arnForObjects("*")],
+        resources: [this.websiteBucket.arnForObjects("*")],
         principals: [new ServicePrincipal("cloudfront.amazonaws.com")],
         conditions: {
           StringEquals: {
-            "AWS:SourceArn": `arn:aws:cloudfront::${this.account}:distribution/${distribution.distributionId}`,
+            "AWS:SourceArn": `arn:aws:cloudfront::${this.account}:distribution/${this.distribution.distributionId}`,
           },
         },
       }),
@@ -94,8 +97,8 @@ export class WebsiteStack extends Stack {
     // Deploy website contents to the bucket
     new BucketDeployment(this, "DeployWebsite", {
       sources: [Source.asset("../dist")],
-      destinationBucket: websiteBucket,
-      distribution,
+      destinationBucket: this.websiteBucket,
+      distribution: this.distribution,
       distributionPaths: ["/*"],
     });
 
@@ -107,13 +110,13 @@ export class WebsiteStack extends Stack {
     new ARecord(this, "RootAlias", {
       zone: hostedZone,
       recordName: domainName,
-      target: RecordTarget.fromAlias(new CloudFrontTarget(distribution)),
+      target: RecordTarget.fromAlias(new CloudFrontTarget(this.distribution)),
     });
 
     new ARecord(this, "WwwAlias", {
       zone: hostedZone,
       recordName: `www.${domainName}`,
-      target: RecordTarget.fromAlias(new CloudFrontTarget(distribution)),
+      target: RecordTarget.fromAlias(new CloudFrontTarget(this.distribution)),
     });
 
     // Output the website URL
