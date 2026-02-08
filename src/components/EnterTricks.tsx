@@ -48,7 +48,12 @@ export default function EnteringTricks(props: {
         setBets={setTricks}
       />
       <HStack alignItems={"stretch"} gap={"4"} mb={"4"}>
-        <Button flex={"1"} onClick={props.onBack}>
+        <Button
+          flex={"0.4"}
+          size={"sm"}
+          variant={"outline"}
+          onClick={props.onBack}
+        >
           Back
         </Button>
         <Button
@@ -56,7 +61,7 @@ export default function EnteringTricks(props: {
           disabled={rounds.length !== totalTrickCount}
           onClick={() => props.onConfirmTricks(tricks)}
         >
-          Confirm Tricks
+          Confirm tricks
         </Button>
       </HStack>
       {rounds.length !== totalTrickCount ? (

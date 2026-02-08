@@ -58,7 +58,12 @@ export default function ShowSummary(props: {
       {isGameOver ? null : (
         <HStack alignItems={"stretch"} gap={"4"} mb={"4"}>
           {isBackButtonShown ? (
-            <Button flex={"1"} onClick={props.onBack}>
+            <Button
+              flex={"0.4"}
+              size={"sm"}
+              variant={"outline"}
+              onClick={props.onBack}
+            >
               Back
             </Button>
           ) : null}

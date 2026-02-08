@@ -47,7 +47,12 @@ export default function EnterBets(props: {
         setBets={setBets}
       />
       <HStack alignItems={"stretch"} gap={"4"} mb={"4"}>
-        <Button flex={"1"} onClick={props.onBack}>
+        <Button
+          flex={"0.4"}
+          size={"sm"}
+          variant={"outline"}
+          onClick={props.onBack}
+        >
           Back
         </Button>
         <Button
@@ -55,7 +60,7 @@ export default function EnterBets(props: {
           disabled={betsAreEqualToTheRoundNumber}
           onClick={() => props.onConfirmBets(bets)}
         >
-          Confirm Bets
+          Confirm bets
         </Button>
       </HStack>
       {betsAreEqualToTheRoundNumber ? (
