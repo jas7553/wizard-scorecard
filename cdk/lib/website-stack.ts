@@ -108,6 +108,7 @@ export class WebsiteStack extends Stack {
       destinationBucket: websiteBucket,
       distribution: distribution,
       distributionPaths: ["/*"],
+      memoryLimit: 512,
     });
 
     // Route 53 DNS setup
