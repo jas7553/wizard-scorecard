@@ -1,0 +1,5 @@
+{
+  "GitHubOidcProvider": {
+    "Arn": "arn:aws:iam::890396755250:oidc-provider/token.actions.githubusercontent.com"
+  }
+}

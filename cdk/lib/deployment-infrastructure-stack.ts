@@ -1,6 +1,7 @@
 import { Stack, StackProps } from "aws-cdk-lib";
 import { Construct } from "constructs";
 import {
+  CfnOIDCProvider,
   PolicyStatement,
   Role,
   WebIdentityPrincipal,
@@ -12,9 +13,14 @@ export class DeploymentInfrastructureStack extends Stack {
   constructor(scope: Construct, id: string, props: StackProps) {
     super(scope, id, props);
 
+    const gitHubOidcProvider = new CfnOIDCProvider(this, "GitHubOidcProvider", {
+      clientIdList: ["sts.amazonaws.com"],
+      url: "https://token.actions.githubusercontent.com",
+    });
+
     const role = new Role(this, "GitHubActionsRole", {
       assumedBy: new WebIdentityPrincipal(
-        `arn:aws:iam::${Stack.of(this).account}:oidc-provider/token.actions.githubusercontent.com`,
+        gitHubOidcProvider.attrArn,
         {
           StringLike: {
             "token.actions.githubusercontent.com:sub": `repo:${gitHubRepoName}:*`,
